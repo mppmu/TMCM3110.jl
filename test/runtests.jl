@@ -18,6 +18,8 @@ function get_axis_parameter(serialport, n_axisparameter, n_motor)
     nothing
   elseif nb_available(serialport) > 9
     info("Input buffer overloaded: clearing...")
+    clear_input_buffer(serialport)
+    info("cleared")
     nothing
   else
     reply = TMCM3110.decode_reply(readbytes!(serialport,9))
