@@ -39,6 +39,6 @@ get_portname_of_TMCM3110()
 if (TMCM3110_PORTNAME == "")
   info("TMCM-3110 not found.")
 else
-  smc = LibSerialPort.open_serial_port(String(TMCM3110_PORTNAME), BAUTRATE)
+  smc = LibSerialPort.open_serial_port(TMCM3110_PORTNAME, BAUTRATE)
   test_get_axis_parameter(smc)
 end
