@@ -14,7 +14,7 @@ function get_portname_of_TMCM3110(;nports_guess::Integer=64)
       # println(sp_get_port_name(port))
       # println("\tDescription:\t",    sp_get_port_description(port))
       # println("\tTransport type:\t", sp_get_port_transport(port))
-      if ismatch(r"TMCM-3110", sp_get_port_description(port) )
+      if ismatch(r"Stepper Device - TMCSTEP", sp_get_port_description(port) )
         global TMCM3110_PORTNAME
         TMCM3110_PORTNAME = sp_get_port_name(port)
         info("TMCM-3110 found: \"$TMCM3110_PORTNAME\"")

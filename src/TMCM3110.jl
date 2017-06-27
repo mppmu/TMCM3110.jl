@@ -1,5 +1,12 @@
 module TMCM3110
 
+export  set_axis_parameter,
+        get_axis_parameter,
+        store_axis_parameter_permanent,
+        clear_input_buffer
+
+
+
 function encode_command(m_address, n_command, n_type, n_motor, value)
   m_address = UInt8( m_address % (1<<8) )
   n_command = UInt8( n_command % (1<<8) )
@@ -159,7 +166,6 @@ INTERRUPT_VECTORS = (  0 => "Timer 0",
                       46 => "Input change 7",
                      255 => "Global interrupts" )
 
-export get_axis_parameter
 function get_axis_parameter(serialport, n_axisparameter, n_motor)
   clear_input_buffer(serialport)
   command = TMCM3110.encode_command(1,6,n_axisparameter, n_motor, 0)
@@ -177,7 +183,6 @@ function get_axis_parameter(serialport, n_axisparameter, n_motor)
   return reply
 end
 
-export set_axis_parameter
 function set_axis_parameter(serialport, n_axisparameter, n_motor, value)
   command = TMCM3110.encode_command(1,5,n_axisparameter, n_motor, value)
   write(serialport, command)
@@ -186,7 +191,6 @@ function set_axis_parameter(serialport, n_axisparameter, n_motor, value)
   nothing
 end
 
-export store_axis_parameter_permanent
 function store_axis_parameter_permanent(serialport, n_axisparameter, n_motor, value)
   # first set the new value
   command = TMCM3110.encode_command(1,5,n_axisparameter, n_motor, value)
@@ -201,7 +205,6 @@ function store_axis_parameter_permanent(serialport, n_axisparameter, n_motor, va
   nothing
 end
 
-export clear_input_buffer
 function clear_input_buffer(serialport)
   readbytes!(serialport,nb_available(serialport))
   nothing
