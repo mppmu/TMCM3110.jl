@@ -1,4 +1,4 @@
-# TMCM3110
+# Control software for the TMCM-3110 v1.11
 
 [![Build Status](https://travis-ci.org/lmh91/TMCM3110.jl.svg?branch=master)](https://travis-ci.org/lmh91/TMCM3110.jl)
 
@@ -6,6 +6,6 @@
 
 [![codecov.io](http://codecov.io/github/lmh91/TMCM3110.jl/coverage.svg?branch=master)](http://codecov.io/github/lmh91/TMCM3110.jl?branch=master)
 
-# Control software for the TMCM-3110 v1.11
 
-see: https://www.trinamic.com/products/modules/details/tmcm-3110/
+
+TMCM-3110: https://www.trinamic.com/products/modules/details/tmcm-3110/
