@@ -1,4 +1,4 @@
-# Control software for the TMCM-3110 v1.11
+# Julia Control Software for the TMCM-3110 v1.11
 
 [![Build Status](https://travis-ci.org/lmh91/TMCM3110.jl.svg?branch=master)](https://travis-ci.org/lmh91/TMCM3110.jl)
 
