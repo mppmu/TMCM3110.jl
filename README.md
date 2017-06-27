@@ -5,3 +5,7 @@
 [![Coverage Status](https://coveralls.io/repos/lmh91/TMCM3110.jl/badge.svg?branch=master&service=github)](https://coveralls.io/github/lmh91/TMCM3110.jl?branch=master)
 
 [![codecov.io](http://codecov.io/github/lmh91/TMCM3110.jl/coverage.svg?branch=master)](http://codecov.io/github/lmh91/TMCM3110.jl?branch=master)
+
+# Control software for the TMCM-3110 v1.11
+
+see: https://www.trinamic.com/products/modules/details/tmcm-3110/
