@@ -3,44 +3,42 @@ using Base.Test
 
 using LibSerialPort
 
+TMCM3110_PORTNAME = ""
 const BAUTRATE = 9600
 
-smc = LibSerialPort.open_serial_port("/dev/ttyACM1", BAUTRATE)
-
-function get_axis_parameter(serialport, n_axisparameter, n_motor)
-  clear_input_buffer(serialport)
-  command = TMCM3110.encode_command(1,6,n_axisparameter, n_motor, 0)
-  write(serialport, command)
-  sleep(0.01)# you have to give the controller time to respond
-  println(nb_available(serialport))
-  if nb_available(serialport) < 9
-    error("No response from controller.")
-    nothing
-  elseif nb_available(serialport) > 9
-    info("Input buffer overloaded: clearing...")
-    clear_input_buffer(serialport)
-    info("cleared")
-    nothing
-  else
-    reply = TMCM3110.decode_reply(readbytes!(serialport,9))
+function get_portname_of_TMCM3110(;nports_guess::Integer=64)
+  # basically a copy from the function LibSerialPort.list_ports()
+  ports = sp_list_ports()
+  for port in unsafe_wrap(Array, ports, nports_guess, false)
+      port == C_NULL && return
+      # println(sp_get_port_name(port))
+      # println("\tDescription:\t",    sp_get_port_description(port))
+      # println("\tTransport type:\t", sp_get_port_transport(port))
+      if ismatch(r"TMCM-3110", sp_get_port_description(port) )
+        global TMCM3110_PORTNAME
+        TMCM3110_PORTNAME = sp_get_port_name(port)
+        info("TMCM-3110 found: \"$TMCM3110_PORTNAME\"")
+      end
   end
-  return reply
+  sp_free_port_list(ports)
+  return nothing
 end
 
-function clear_input_buffer(serialport)
-  readbytes!(serialport,nb_available(serialport))
-  nothing
-end
 
-function mytest()
-  k = 1
-  while k <= 10
-    info("k: $k / 10")
-    println( get_axis_parameter(smc, 209,0) )
-    sleep(1)
-    k+=1
+
+function test_get_axis_parameter(serialport)
+  for (key,value) in TMCM3110.AXIS_PARAMETER
+    info("$key - $value:")
+    println("\t  = $(get_axis_parameter(serialport, key, 0))\n")
   end
-  return 0
+  return nothing
 end
 
-mytest()
+get_portname_of_TMCM3110()
+
+if (TMCM3110_PORTNAME == "")
+  info("TMCM-3110 not found.")
+else
+  smc = LibSerialPort.open_serial_port(String(TMCM3110_PORTNAME), BAUTRATE)
+  test_get_axis_parameter(smc)
+end

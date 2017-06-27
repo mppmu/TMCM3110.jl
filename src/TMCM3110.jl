@@ -19,7 +19,7 @@ function decode_reply(reply)
   r_address  = UInt8( reply[1] )
   m_address  = UInt8( reply[2] )
   r_status   = UInt8( reply[3] )
-  Int32(r_status) != 200 ? warn(STATUSCODES[Int(r_status)]) : nothing
+  Int32(r_status) != 100 ? warn(STATUSCODES[Int(r_status)]) : nothing
   n_command  = UInt8( reply[4] )
   values     = [ UInt8(value) for value in reply[5:8] ]
   r_checksum = UInt8( reply[9] )
@@ -158,5 +158,53 @@ INTERRUPT_VECTORS = (  0 => "Timer 0",
                       45 => "Input change 6",
                       46 => "Input change 7",
                      255 => "Global interrupts" )
+
+export get_axis_parameter
+function get_axis_parameter(serialport, n_axisparameter, n_motor)
+  clear_input_buffer(serialport)
+  command = TMCM3110.encode_command(1,6,n_axisparameter, n_motor, 0)
+  write(serialport, command)
+  sleep(0.01)# you have to give the controller time to respond
+  if nb_available(serialport) < 9
+    error("No response from controller.")
+    nothing
+  elseif nb_available(serialport) > 9
+    info("Input buffer overloaded: clearing...")
+    nothing
+  else
+    reply = TMCM3110.decode_reply(readbytes!(serialport,9))
+  end
+  return reply
+end
+
+export set_axis_parameter
+function set_axis_parameter(serialport, n_axisparameter, n_motor, value)
+  command = TMCM3110.encode_command(1,5,n_axisparameter, n_motor, value)
+  write(serialport, command)
+  sleep(0.01)# you have to give the controller time to respond
+  println( get_axis_parameter(serialport, n_axisparameter, 0) )
+  nothing
+end
+
+export store_axis_parameter_permanent
+function store_axis_parameter_permanent(serialport, n_axisparameter, n_motor, value)
+  # first set the new value
+  command = TMCM3110.encode_command(1,5,n_axisparameter, n_motor, value)
+  write(serialport, command)
+  sleep(0.01)
+  # then store it permanent
+  command = TMCM3110.encode_command(1,7,n_axisparameter, n_motor, 0)
+  write(serialport, command)
+  sleep(0.01)# you have to give the controller time to respond
+  # check it
+  println( get_axis_parameter(serialport, n_axisparameter, 0) )
+  nothing
+end
+
+export clear_input_buffer
+function clear_input_buffer(serialport)
+  readbytes!(serialport,nb_available(serialport))
+  nothing
+end
 
 end # module
