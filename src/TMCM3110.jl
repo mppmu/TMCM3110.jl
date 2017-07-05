@@ -36,7 +36,7 @@ function decode_reply(reply)
   return value
 end
 
-STATUSCODES = Dict( 100 => "Succesfully executed, no error",
+STATUSCODES = ( 100 => "Succesfully executed, no error",
                     101 => "Command loaded into TMCL program EEPROM",
                       1 => "Wrong Checksum",
                       2 => "Invalid command",
@@ -45,7 +45,7 @@ STATUSCODES = Dict( 100 => "Succesfully executed, no error",
                       5 => "Configuration EEPROM locked",
                       6 => "Command not available" )
 
-COMMAND_NUMBERS = Dict(  1 => "ROR",
+COMMAND_NUMBERS = (      1 => "ROR",
                          2 => "ROL",
                          3 => "MST",
                          4 => "MVP",
@@ -80,7 +80,7 @@ COMMAND_NUMBERS = Dict(  1 => "ROR",
                         38 => "RETI",
                         39 => "ACO"  )
 
-AXIS_PARAMETER = Dict(   0 => "target position",
+AXIS_PARAMETER = (       0 => "target position",
                          1 => "actual position",
                          2 => "target speed",
                          3 => "actual speed",
@@ -138,7 +138,7 @@ AXIS_PARAMETER = Dict(   0 => "target position",
                        212 => "encoder max deviation",
                        214 => "power down delay"    )
 
-INTERRUPT_VECTORS = Dict(  0 => "Timer 0",
+INTERRUPT_VECTORS = (  0 => "Timer 0",
                            1 => "Timer 1",
                            2 => "Timer 2",
                            3 => "Target position 0 reached",
@@ -170,7 +170,7 @@ function get_axis_parameter(serialport, n_axisparameter, n_motor)
   clear_input_buffer(serialport)
   command = TMCM3110.encode_command(1,6,n_axisparameter, n_motor, 0)
   write(serialport, command)
-  sleep(0.01)# you have to give the controller time to respond
+  sleep(0.05)# you have to give the controller time to respond
   if nb_available(serialport) < 9
     error("No response from controller.")
     nothing
@@ -186,7 +186,7 @@ end
 function set_axis_parameter(serialport, n_axisparameter, n_motor, value)
   command = TMCM3110.encode_command(1,5,n_axisparameter, n_motor, value)
   write(serialport, command)
-  sleep(0.01)# you have to give the controller time to respond
+  sleep(0.05)# you have to give the controller time to respond
   println( get_axis_parameter(serialport, n_axisparameter, 0) )
   nothing
 end
@@ -195,11 +195,11 @@ function store_axis_parameter_permanent(serialport, n_axisparameter, n_motor, va
   # first set the new value
   command = TMCM3110.encode_command(1,5,n_axisparameter, n_motor, value)
   write(serialport, command)
-  sleep(0.01)
+  sleep(0.05)
   # then store it permanent
   command = TMCM3110.encode_command(1,7,n_axisparameter, n_motor, 0)
   write(serialport, command)
-  sleep(0.01)# you have to give the controller time to respond
+  sleep(0.05)# you have to give the controller time to respond
   # check it
   println( get_axis_parameter(serialport, n_axisparameter, 0) )
   nothing
@@ -213,14 +213,25 @@ end
 function rotate_right(serialport, n_motor, value)
   command = TMCM3110.encode_command(1, 1, 0, n_motor, value)
   write(serialport, command)
-  sleep(0.01)
+  sleep(0.05)
   nothing
 end
 
 function rotate_left(serialport, n_motor, value)
   command = TMCM3110.encode_command(1, 2, 0, n_motor, value)
   write(serialport, command)
-  sleep(0.01)
+  sleep(0.05)
+  nothing
+end
+
+function move_to_position(serialport, n_motor, value)
+  # n_type = 0 -> absolute position
+  # n_type = 1 -> relative position
+  # n_type = 2 -> coordinate number ?
+  n_type = 0
+  command = TMCM3110.encode_command(1, 4, n_type, n_motor, value)
+  write(serialport, command)
+  sleep(0.05)
   nothing
 end
 

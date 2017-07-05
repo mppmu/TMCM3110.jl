@@ -27,9 +27,21 @@ end
 
 
 function test_get_axis_parameter(serialport)
-  for (key,value) in TMCM3110.AXIS_PARAMETER
-    info("$key - $value:")
-    println("\t  = $(get_axis_parameter(serialport, key, 0))\n")
+  for (key,value) in TMCM3110.AXIS_PARAMETER # wrong oder
+    axis_parameter = "unknown"
+    try
+      axis_parameter = get_axis_parameter(serialport, key, 0)
+    catch err
+      error("ERROR: $err")
+      axis_parameter = "ERROR"
+    end
+    if length(value) <= 12
+      info("$key  \t- $value:\t\t\t$axis_parameter")
+    elseif 12 < length(value) <= 20
+      info("$key  \t- $value:\t\t$axis_parameter")
+    else
+      info("$key  \t- $value:\t$axis_parameter")
+    end
   end
   return nothing
 end
