@@ -1,10 +1,14 @@
 module TMCM3110
 
+using LibSerialPort
+
+TMCM3110_PORTNAME = ""
+const BAUTRATE = 9600
+
 export  set_axis_parameter,
         get_axis_parameter,
         store_axis_parameter_permanent,
         clear_input_buffer
-
 
 
 function encode_command(m_address, n_command, n_type, n_motor, value)
@@ -170,7 +174,7 @@ function get_axis_parameter(serialport, n_axisparameter, n_motor)
   clear_input_buffer(serialport)
   command = TMCM3110.encode_command(1,6,n_axisparameter, n_motor, 0)
   write(serialport, command)
-  sleep(0.05)# you have to give the controller time to respond
+  sleep(0.02)# you have to give the controller time to respond
   if nb_available(serialport) < 9
     error("No response from controller.")
     nothing
@@ -186,7 +190,7 @@ end
 function set_axis_parameter(serialport, n_axisparameter, n_motor, value)
   command = TMCM3110.encode_command(1,5,n_axisparameter, n_motor, value)
   write(serialport, command)
-  sleep(0.05)# you have to give the controller time to respond
+  sleep(0.02)# you have to give the controller time to respond
   println( get_axis_parameter(serialport, n_axisparameter, 0) )
   nothing
 end
@@ -195,11 +199,11 @@ function store_axis_parameter_permanent(serialport, n_axisparameter, n_motor, va
   # first set the new value
   command = TMCM3110.encode_command(1,5,n_axisparameter, n_motor, value)
   write(serialport, command)
-  sleep(0.05)
+  sleep(0.02)
   # then store it permanent
   command = TMCM3110.encode_command(1,7,n_axisparameter, n_motor, 0)
   write(serialport, command)
-  sleep(0.05)# you have to give the controller time to respond
+  sleep(0.02)# you have to give the controller time to respond
   # check it
   println( get_axis_parameter(serialport, n_axisparameter, 0) )
   nothing
@@ -213,14 +217,14 @@ end
 function rotate_right(serialport, n_motor, value)
   command = TMCM3110.encode_command(1, 1, 0, n_motor, value)
   write(serialport, command)
-  sleep(0.05)
+  sleep(0.02)
   nothing
 end
 
 function rotate_left(serialport, n_motor, value)
   command = TMCM3110.encode_command(1, 2, 0, n_motor, value)
   write(serialport, command)
-  sleep(0.05)
+  sleep(0.02)
   nothing
 end
 
@@ -231,8 +235,48 @@ function move_to_position(serialport, n_motor, value)
   n_type = 0
   command = TMCM3110.encode_command(1, 4, n_type, n_motor, value)
   write(serialport, command)
-  sleep(0.05)
+  sleep(0.02)
   nothing
+end
+
+function list_all_axis_parameters(serialport)
+  for (key,value) in TMCM3110.AXIS_PARAMETER # wrong oder
+    axis_parameters = Any[0,0,0]
+    for i in 1:3
+      try
+        axis_parameters[i] = get_axis_parameter(serialport, key, i-1)
+      catch err
+        warn("$err")
+        axis_parameters[i] = "ERROR"
+      end
+    end
+    if length(value) <= 12
+      info("$key  \t- $value:\t\t\t$(axis_parameters[1])\t\t$(axis_parameters[2])\t\t$(axis_parameters[3])")
+    elseif 12 < length(value) <= 20
+      info("$key  \t- $value:\t\t$(axis_parameters[1])\t\t$(axis_parameters[2])\t\t$(axis_parameters[3])")
+    else
+      info("$key  \t- $value:\t$(axis_parameters[1])\t\t$(axis_parameters[2])\t\t$(axis_parameters[3])")
+    end
+  end
+  return nothing
+end
+
+function get_portname_of_TMCM3110( ;nports_guess::Integer=64)
+  global TMCM3110_PORTNAME=""
+  # basically a copy from the function LibSerialPort.list_ports()
+  ports = sp_list_ports()
+  for port in unsafe_wrap(Array, ports, nports_guess, false)
+      port == C_NULL && return
+      # println(sp_get_port_name(port))
+      # println("\tDescription:\t",    sp_get_port_description(port))
+      # println("\tTransport type:\t", sp_get_port_transport(port))
+      if ismatch(r"Stepper Device - TMCSTEP", sp_get_port_description(port) )
+        TMCM3110_PORTNAME = sp_get_port_name(port)
+        info("TMCM-3110 found: \"$TMCM3110_PORTNAME\"")
+      end
+  end
+  sp_free_port_list(ports)
+  return nothing
 end
 
 end # module
