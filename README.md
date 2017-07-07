@@ -16,7 +16,7 @@ TMCM-3110: https://www.trinamic.com/products/modules/details/tmcm-3110/
 
 First install the requirements:
 
-    julia> Pkg.add("BinDeps.jl")
+    julia> Pkg.add("BinDeps")
     julia> Pkg.clone("https://github.com/andrewadare/LibSerialPort.jl.git")
     julia> Pkg.build("LibSerialPort")
 
