@@ -22,7 +22,7 @@ First install the requirements:
 
 Then install the package:
 
-    julia> Pkg.clone("https://github.com/lmh91/TMCM3110.jl.git")
+    julia> Pkg.clone("https://github.com/mppmu/TMCM3110.jl.git")
 
 # Test
 
