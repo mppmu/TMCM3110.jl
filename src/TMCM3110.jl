@@ -11,6 +11,8 @@ export  set_axis_parameter,
         clear_input_buffer
 
 
+
+
 function encode_command(m_address, n_command, n_type, n_motor, value)
   m_address = UInt8( m_address % (1<<8) )
   n_command = UInt8( n_command % (1<<8) )
@@ -278,5 +280,7 @@ function get_portname_of_TMCM3110( ;nports_guess::Integer=64)
   sp_free_port_list(ports)
   return nothing
 end
+
+
 
 end # module
