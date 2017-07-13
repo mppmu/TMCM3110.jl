@@ -11,8 +11,6 @@ export  set_axis_parameter,
         clear_input_buffer
 
 
-
-
 function encode_command(m_address, n_command, n_type, n_motor, value)
   m_address = UInt8( m_address % (1<<8) )
   n_command = UInt8( n_command % (1<<8) )
@@ -238,6 +236,16 @@ function move_to_position(serialport, n_motor, value)
   command = TMCM3110.encode_command(1, 4, n_type, n_motor, value)
   write(serialport, command)
   sleep(0.02)
+  actual_motor_position = get_axis_parameter(serialport, 1, n_motor)
+  encoder_position = get_axis_parameter(serialport, 209, n_motor)
+  println("motor_postion | encoder_position")
+  while actual_motor_position != value
+    println(actual_motor_position, "\t|\t", encoder_position)
+    try encoder_position = get_axis_parameter(serialport, 209, n_motor) end
+    try actual_motor_position = get_axis_parameter(serialport, 1, n_motor) end
+    sleep(1)
+  end
+  println(actual_motor_position, "\t|\t", encoder_position)
   nothing
 end
 
@@ -279,6 +287,39 @@ function get_portname_of_TMCM3110( ;nports_guess::Integer=64)
   end
   sp_free_port_list(ports)
   return nothing
+end
+
+function show_encoder_and_motor_positions(serialport)
+  for (key,value) in TMCM3110.AXIS_PARAMETER # wrong oder
+    if (key==1) || (key==209)
+      axis_parameters = Any[0,0,0]
+      for i in 1:3
+        try
+          axis_parameters[i] = get_axis_parameter(serialport, key, i-1)
+        catch err
+          warn("$err")
+          axis_parameters[i] = "ERROR"
+        end
+      end
+      if length(value) <= 12
+        info("$key  \t- $value:\t\t\t$(axis_parameters[1])\t\t$(axis_parameters[2])\t\t$(axis_parameters[3])")
+      elseif 12 < length(value) <= 20
+        info("$key  \t- $value:\t\t$(axis_parameters[1])\t\t$(axis_parameters[2])\t\t$(axis_parameters[3])")
+      else
+        info("$key  \t- $value:\t$(axis_parameters[1])\t\t$(axis_parameters[2])\t\t$(axis_parameters[3])")
+      end
+    end
+  end
+  return nothing
+end
+
+function reset_encoder_and_motor_positions(serialport)
+  set_axis_parameter(serialport, 209, 0, 0)
+  set_axis_parameter(serialport, 209, 1, 0)
+  set_axis_parameter(serialport, 209, 2, 0)
+  set_axis_parameter(serialport, 1, 0, 0)
+  set_axis_parameter(serialport, 1, 1, 0)
+  set_axis_parameter(serialport, 1, 2, 0)
 end
 
 
