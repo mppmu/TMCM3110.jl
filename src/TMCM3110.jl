@@ -5,7 +5,6 @@ using LibSerialPort
 TMCM3110_PORTNAME = ""
 const BAUTRATE = 9600
 
-
 function encode_command(m_address, n_command, n_type, n_motor, value)
   m_address = UInt8( m_address % (1<<8) )
   n_command = UInt8( n_command % (1<<8) )
