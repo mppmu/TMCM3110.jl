@@ -171,10 +171,10 @@ function get_axis_parameter(serialport, n_axisparameter, n_motor)
   sleep(0.02)# you have to give the controller time to respond
   if nb_available(serialport) < 9
     error("No response from controller.")
-    nothing
+    reply -99999999999
   elseif nb_available(serialport) > 9
     info("Input buffer overloaded: clearing...")
-    nothing
+    reply = -99999999999
   else
     reply = TMCM3110.decode_reply(readbytes!(serialport,9))
   end
@@ -199,7 +199,7 @@ function store_axis_parameter_permanent(serialport, n_axisparameter, n_motor, va
   write(serialport, command)
   sleep(0.02)# you have to give the controller time to respond
   # check it
-  println( get_axis_parameter(serialport, n_axisparameter, 0) )
+  println( get_axis_parameter(serialport, n_axisparameter, n_motor) )
   nothing
 end
 
