@@ -166,6 +166,7 @@ INTERRUPT_VECTORS = (  0 => "Timer 0",
 
 function get_axis_parameter(serialport, n_axisparameter, n_motor)
   clear_input_buffer(serialport)
+  sleep(0.02)# you have to give the controller time to respond
   command = TMCM3110.encode_command(1,6,n_axisparameter, n_motor, 0)
   write(serialport, command)
   sleep(0.02)# you have to give the controller time to respond
@@ -178,6 +179,10 @@ function get_axis_parameter(serialport, n_axisparameter, n_motor)
     clear_input_buffer(serialport)
     reply = get_axis_parameter(serialport, n_axisparameter, n_motor)
     nothing
+    reply -99999999999
+  elseif nb_available(serialport) > 9
+    info("Input buffer overloaded: clearing...")
+    reply = -99999999999
   else
     reply = TMCM3110.decode_reply(readbytes!(serialport,9))
   end
@@ -185,14 +190,15 @@ function get_axis_parameter(serialport, n_axisparameter, n_motor)
 end
 
 function set_axis_parameter(serialport, n_axisparameter, n_motor, value)
+  sleep(0.02)
   command = TMCM3110.encode_command(1,5,n_axisparameter, n_motor, value)
   write(serialport, command)
-  sleep(0.02)# you have to give the controller time to respond
-  println( get_axis_parameter(serialport, n_axisparameter, 0) )
+  println( get_axis_parameter(serialport, n_axisparameter, n_motor) )
   nothing
 end
 
 function store_axis_parameter_permanent(serialport, n_axisparameter, n_motor, value)
+  sleep(0.02)
   # first set the new value
   command = TMCM3110.encode_command(1,5,n_axisparameter, n_motor, value)
   write(serialport, command)
@@ -202,7 +208,7 @@ function store_axis_parameter_permanent(serialport, n_axisparameter, n_motor, va
   write(serialport, command)
   sleep(0.02)# you have to give the controller time to respond
   # check it
-  println( get_axis_parameter(serialport, n_axisparameter, 0) )
+  println( get_axis_parameter(serialport, n_axisparameter, n_motor) )
   nothing
 end
 
