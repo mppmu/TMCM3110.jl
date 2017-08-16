@@ -14,20 +14,6 @@ TMCM-3110: https://www.trinamic.com/products/modules/details/tmcm-3110/
 
 # Installation
 
-First install the requirements:
-
-    julia> Pkg.add("BinDeps")
-    julia> Pkg.clone("https://github.com/andrewadare/LibSerialPort.jl.git")
-    julia> Pkg.build("LibSerialPort")
-
-Then install the package:
+Install the package:
 
     julia> Pkg.clone("https://github.com/mppmu/TMCM3110.jl.git")
-
-# Test
-
-Just connect the controller TMCM-3110 via USB and run the Pkg.test function:
-
-    julia> Pkg.test("TMCM3110")
-
-Now all axis parameters of motor 0 should be listed. See "test/runtests.jl".
