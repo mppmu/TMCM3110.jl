@@ -1,9 +1,6 @@
+__precompile__()
+
 module TMCM3110
-
-using LibSerialPort
-
-TMCM3110_PORTNAME = ""
-const BAUTRATE = 9600
 
 function encode_command(m_address, n_command, n_type, n_motor, value)
   m_address = UInt8( m_address % (1<<8) )
@@ -164,6 +161,11 @@ INTERRUPT_VECTORS = (  0 => "Timer 0",
                           46 => "Input change 7",
                          255 => "Global interrupts" )
 
+function clear_input_buffer(serialport)
+    read(serialport,nb_available(serialport))
+    nothing
+end
+
 function get_axis_parameter(serialport, n_axisparameter, n_motor)
   clear_input_buffer(serialport)
   sleep(0.02)# you have to give the controller time to respond
@@ -178,62 +180,43 @@ function get_axis_parameter(serialport, n_axisparameter, n_motor)
     info("Input buffer overloaded: clearing...")
     clear_input_buffer(serialport)
     reply = get_axis_parameter(serialport, n_axisparameter, n_motor)
-    nothing
-    reply -99999999999
-  elseif nb_available(serialport) > 9
-    info("Input buffer overloaded: clearing...")
-    reply = -99999999999
   else
-    reply = TMCM3110.decode_reply(readbytes!(serialport,9))
+    reply = TMCM3110.decode_reply(read(serialport,9))
   end
   return reply
 end
 
 function set_axis_parameter(serialport, n_axisparameter, n_motor, value)
+  clear_input_buffer(serialport)
   sleep(0.02)
   command = TMCM3110.encode_command(1,5,n_axisparameter, n_motor, value)
   write(serialport, command)
+  sleep(0.02)
+  clear_input_buffer(serialport)
   println( get_axis_parameter(serialport, n_axisparameter, n_motor) )
   nothing
 end
 
 function store_axis_parameter_permanent(serialport, n_axisparameter, n_motor, value)
+  clear_input_buffer(serialport)
   sleep(0.02)
   # first set the new value
   command = TMCM3110.encode_command(1,5,n_axisparameter, n_motor, value)
   write(serialport, command)
   sleep(0.02)
+  clear_input_buffer(serialport)
+  sleep(0.02)
   # then store it permanent
   command = TMCM3110.encode_command(1,7,n_axisparameter, n_motor, 0)
   write(serialport, command)
+  sleep(0.02)
+  clear_input_buffer(serialport)
   sleep(0.02)# you have to give the controller time to respond
   # check it
   println( get_axis_parameter(serialport, n_axisparameter, n_motor) )
   nothing
 end
 
-function clear_input_buffer(serialport)
-  readbytes!(serialport,nb_available(serialport))
-  nothing
-end
-
-function get_portname_of_TMCM3110( ;nports_guess::Integer=64)
-  global TMCM3110_PORTNAME=""
-  # basically a copy from the function LibSerialPort.list_ports()
-  ports = sp_list_ports()
-  for port in unsafe_wrap(Array, ports, nports_guess, false)
-      port == C_NULL && return
-      # println(sp_get_port_name(port))
-      # println("\tDescription:\t",    sp_get_port_description(port))
-      # println("\tTransport type:\t", sp_get_port_transport(port))
-      if ismatch(r"Stepper Device - TMCSTEP", sp_get_port_description(port) )
-        TMCM3110_PORTNAME = sp_get_port_name(port)
-        info("TMCM-3110 found: \"$TMCM3110_PORTNAME\"")
-      end
-  end
-  sp_free_port_list(ports)
-  return nothing
-end
 
 function list_all_axis_parameters(serialport)
   for (key,value) in TMCM3110.AXIS_PARAMETER # wrong oder
