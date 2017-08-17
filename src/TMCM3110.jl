@@ -2,6 +2,7 @@ __precompile__()
 
 module TMCM3110
 
+export encode_command
 function encode_command(m_address, n_command, n_type, n_motor, value)
   m_address = UInt8( m_address % (1<<8) )
   n_command = UInt8( n_command % (1<<8) )
@@ -17,6 +18,7 @@ function encode_command(m_address, n_command, n_type, n_motor, value)
   return tmcl_bytes
 end
 
+export decode_reply
 function decode_reply(reply)
   r_address  = UInt8( reply[1] )
   m_address  = UInt8( reply[2] )
@@ -31,7 +33,8 @@ function decode_reply(reply)
   return value
 end
 
-STATUSCODES = ( 100 => "Succesfully executed, no error",
+export STATUSCODES
+STATUSCODES = Dict( 100 => "Succesfully executed, no error",
                     101 => "Command loaded into TMCL program EEPROM",
                       1 => "Wrong Checksum",
                       2 => "Invalid command",
@@ -40,7 +43,8 @@ STATUSCODES = ( 100 => "Succesfully executed, no error",
                       5 => "Configuration EEPROM locked",
                       6 => "Command not available" )
 
-COMMAND_NUMBERS = (      1 => "ROR",
+export COMMAND_NUMBERS
+COMMAND_NUMBERS = Dict(  1 => "ROR",
                          2 => "ROL",
                          3 => "MST",
                          4 => "MVP",
@@ -75,7 +79,8 @@ COMMAND_NUMBERS = (      1 => "ROR",
                         38 => "RETI",
                         39 => "ACO"  )
 
-AXIS_PARAMETER = (       0 => "target position",
+export AXIS_PARAMETER
+AXIS_PARAMETER = Dict(   0 => "target position",
                          1 => "actual position",
                          2 => "target speed",
                          3 => "actual speed",
@@ -133,7 +138,8 @@ AXIS_PARAMETER = (       0 => "target position",
                        212 => "encoder max deviation",
                        214 => "power down delay"    )
 
-INTERRUPT_VECTORS = (  0 => "Timer 0",
+export INTERRUPT_VECTORS
+INTERRUPT_VECTORS = Dict(  0 => "Timer 0",
                            1 => "Timer 1",
                            2 => "Timer 2",
                            3 => "Target position 0 reached",
@@ -161,83 +167,7 @@ INTERRUPT_VECTORS = (  0 => "Timer 0",
                           46 => "Input change 7",
                          255 => "Global interrupts" )
 
-function clear_input_buffer(serialport)
-    read(serialport,nb_available(serialport))
-    nothing
-end
-
-function get_axis_parameter(serialport, n_axisparameter, n_motor)
-  clear_input_buffer(serialport)
-  sleep(0.02)# you have to give the controller time to respond
-  command = TMCM3110.encode_command(1,6,n_axisparameter, n_motor, 0)
-  write(serialport, command)
-  sleep(0.02)# you have to give the controller time to respond
-  if nb_available(serialport) < 9
-    error("No response from controller.")
-    reply = get_axis_parameter(serialport, n_axisparameter, n_motor)
-    nothing
-  elseif nb_available(serialport) > 9
-    info("Input buffer overloaded: clearing...")
-    clear_input_buffer(serialport)
-    reply = get_axis_parameter(serialport, n_axisparameter, n_motor)
-  else
-    reply = TMCM3110.decode_reply(read(serialport,9))
-  end
-  return reply
-end
-
-function set_axis_parameter(serialport, n_axisparameter, n_motor, value)
-  clear_input_buffer(serialport)
-  sleep(0.02)
-  command = TMCM3110.encode_command(1,5,n_axisparameter, n_motor, value)
-  write(serialport, command)
-  sleep(0.02)
-  clear_input_buffer(serialport)
-  println( get_axis_parameter(serialport, n_axisparameter, n_motor) )
-  nothing
-end
-
-function store_axis_parameter_permanent(serialport, n_axisparameter, n_motor, value)
-  clear_input_buffer(serialport)
-  sleep(0.02)
-  # first set the new value
-  command = TMCM3110.encode_command(1,5,n_axisparameter, n_motor, value)
-  write(serialport, command)
-  sleep(0.02)
-  clear_input_buffer(serialport)
-  sleep(0.02)
-  # then store it permanent
-  command = TMCM3110.encode_command(1,7,n_axisparameter, n_motor, 0)
-  write(serialport, command)
-  sleep(0.02)
-  clear_input_buffer(serialport)
-  sleep(0.02)# you have to give the controller time to respond
-  # check it
-  println( get_axis_parameter(serialport, n_axisparameter, n_motor) )
-  nothing
-end
 
 
-function list_all_axis_parameters(serialport)
-  for (key,value) in TMCM3110.AXIS_PARAMETER # wrong oder
-    axis_parameters = Any[0,0,0]
-    for i in 1:3
-      try
-        axis_parameters[i] = get_axis_parameter(serialport, key, i-1)
-      catch err
-        warn("$err")
-        axis_parameters[i] = "ERROR"
-      end
-    end
-    if length(value) <= 12
-      info("$key  \t- $value:\t\t\t$(axis_parameters[1])\t\t$(axis_parameters[2])\t\t$(axis_parameters[3])")
-    elseif 12 < length(value) <= 20
-      info("$key  \t- $value:\t\t$(axis_parameters[1])\t\t$(axis_parameters[2])\t\t$(axis_parameters[3])")
-    else
-      info("$key  \t- $value:\t$(axis_parameters[1])\t\t$(axis_parameters[2])\t\t$(axis_parameters[3])")
-    end
-  end
-  return nothing
-end
 
 end # module
