@@ -1,4 +1,4 @@
 name = "TMCM3110"
 uuid = "3b5b3921-9cd0-4325-87d5-4a617f341fc1"
 authors = ["Lukas Hauertmann <lhauert@mpp.mpg.de>"]
-version = "0.1.0"
+version = "0.3.0"
